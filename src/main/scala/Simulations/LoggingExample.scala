@@ -1,26 +1,26 @@
 package Simulations
 
 import HelperUtils.{CreateLogger, ObtainConfigReference}
-import Simulations.BasicExample.config
-import org.cloudbus.cloudsim.allocationpolicies.{VmAllocationPolicyAbstract, VmAllocationPolicyRoundRobin, VmAllocationPolicySimple}
 import org.cloudbus.cloudsim.brokers.{DatacenterBroker, DatacenterBrokerSimple}
 import org.cloudbus.cloudsim.cloudlets.{Cloudlet, CloudletSimple}
 import org.cloudbus.cloudsim.core.CloudSim
 import org.cloudbus.cloudsim.datacenters.{Datacenter, DatacenterSimple}
 import org.cloudbus.cloudsim.hosts.{Host, HostSimple}
 import org.cloudbus.cloudsim.resources.{Pe, PeSimple}
-import org.cloudbus.cloudsim.schedulers.cloudlet.CloudletSchedulerTimeShared
-import org.cloudbus.cloudsim.schedulers.vm.{VmScheduler, VmSchedulerSpaceShared, VmSchedulerTimeShared}
 import org.cloudbus.cloudsim.utilizationmodels.UtilizationModelDynamic
 import org.cloudbus.cloudsim.vms.{Vm, VmSimple}
 import org.cloudsimplus.builders.tables.CloudletsTableBuilder
+import org.cloudsimplus.util.Log
+import ch.qos.logback.classic.Level
+import org.cloudbus.cloudsim.allocationpolicies.VmAllocationPolicy
+import org.cloudbus.cloudsim.schedulers.cloudlet.CloudletScheduler
 
 import collection.JavaConverters.*
 import scala.collection.mutable.ListBuffer
 
-class BasicExample
+class LoggingExample
 
-object BasicExample:
+object LoggingExample:
 
   val config = ObtainConfigReference("cloudSimulator") match {
     case Some(value) => value
@@ -40,73 +40,82 @@ object BasicExample:
     broker0.submitCloudletList(cloudletList.asJava);
     broker0.submitVmList(vmList.asJava);
 
+    configureLogs();
     simulation.start();
 
     new CloudletsTableBuilder(broker0.getCloudletFinishedList).build();
   }
 
+  private def configureLogs() : Unit = {
+    Log.setLevel(Level.INFO)
+
+    Log.setLevel(Datacenter.LOGGER, Level.ERROR)
+    Log.setLevel(DatacenterBroker.LOGGER, Level.WARN)
+    Log.setLevel(VmAllocationPolicy.LOGGER, Level.WARN)
+    Log.setLevel(CloudletScheduler.LOGGER, Level.WARN)
+  }
+
   private def createDatacenter(simulation: CloudSim): Datacenter = {
     val num_hosts : Int = config.getInt("cloudSimulator.setup.Hosts")
     val hostList : List[Host] = createHosts(num_hosts)
-    return new DatacenterSimple(simulation, hostList.asJava, new VmAllocationPolicySimple());
+    return new DatacenterSimple(simulation, hostList.asJava);
   }
 
   private def createHosts(num_hosts: Int) : List[Host] = {
     val listbuffer = ListBuffer.empty[Host]
 
-    createHosts(num_hosts, listbuffer)
+    createHostsImpl(num_hosts, listbuffer)
 
     return listbuffer.toList
   }
 
-  private def createHosts(num_hosts: Int, listbuffer: ListBuffer[Host]) : Unit = {
+  private def createHostsImpl(num_hosts: Int, listbuffer: ListBuffer[Host]) : Unit = {
     if (num_hosts == 0) {
       return
     }
 
-    listbuffer += createHosts()
+    listbuffer += createHost()
 
-    createHosts(num_hosts - 1, listbuffer)
+    createHostsImpl(num_hosts - 1, listbuffer)
   }
 
-  private def createHosts() : Host = {
+  private def createHost() : Host = {
     val Host_RAM : Int = config.getInt("cloudSimulator.host.RAMInMBs")
     val Host_BW : Int = config.getInt("cloudSimulator.host.BandwidthInMBps")
     val Host_Storage : Int = config.getInt("cloudSimulator.host.StorageInMBs")
     val Host_Pes : Int = config.getInt("cloudSimulator.host.Pes")
     val peList : List[Pe] = createPes(Host_Pes)
-    val sch = new VmSchedulerTimeShared()
     return new HostSimple(Host_RAM, Host_BW, Host_Storage, peList.asJava);
   }
 
   private def createPes(num: Int): List[Pe] ={
     val pes = ListBuffer.empty[Pe]
 
-    createPes(num, pes)
+    createPesImpl(num, pes)
 
     return pes.toList
   }
 
-  private def createPes(num: Int, listbuffer: ListBuffer[Pe]) : Unit = {
+  private def createPesImpl(num: Int, listbuffer: ListBuffer[Pe]) : Unit = {
     if (num == 0){
       return
     }
     val Hosts : Int = config.getInt("cloudSimulator.host.mipsCapacity")
     listbuffer += new PeSimple(Hosts)
 
-    createPes(num - 1, listbuffer)
+    createPesImpl(num - 1, listbuffer)
   }
 
   private def createVms() : List[Vm] = {
     val num_VMs : Int = config.getInt("cloudSimulator.setup.Vms")
 
     val vmList = ListBuffer.empty[Vm]
-    createVms(num_VMs, vmList)
-//    val vmList : List[Vm] = List(new VmSimple(vm_Mips, vm_Pes).setRam(vm_RAM).setSize(vm_Size).setBw(vm_BW))
+    createVmsImpl(num_VMs, vmList)
+    //    val vmList : List[Vm] = List(new VmSimple(vm_Mips, vm_Pes).setRam(vm_RAM).setSize(vm_Size).setBw(vm_BW))
     return vmList.toList
   }
 
-  private def createVms(num_VMs: Int, listbuffer: ListBuffer[Vm]) : Unit = {
+  private def createVmsImpl(num_VMs: Int, listbuffer: ListBuffer[Vm]) : Unit = {
     if (num_VMs == 0) {
       return
     }
@@ -121,19 +130,19 @@ object BasicExample:
 
     listbuffer += vm
 
-    createVms(num_VMs - 1, listbuffer)
+    createVmsImpl(num_VMs - 1, listbuffer)
   }
 
   private def createCloudlets() : List[Cloudlet] = {
     val utilizationModel : UtilizationModelDynamic = new UtilizationModelDynamic(config.getDouble("cloudSimulator.utilizationRatio"))
     val num_Cloudlets : Int = config.getInt("cloudSimulator.setup.Cloudlets")
     val cloudletList = ListBuffer.empty [Cloudlet]
-    createCloudlets(num_Cloudlets, utilizationModel, cloudletList)
-//    val cloudletList : List [Cloudlet] = List(new CloudletSimple(cloudlet_Size, cloudlet_Pes, utilizationModel).setSizes(config.getInt("cloudSimulator.cloudlet.ioSizes")))
+    createCloudletsImpl(num_Cloudlets, utilizationModel, cloudletList)
+    //    val cloudletList : List [Cloudlet] = List(new CloudletSimple(cloudlet_Size, cloudlet_Pes, utilizationModel).setSizes(config.getInt("cloudSimulator.cloudlet.ioSizes")))
     return cloudletList.toList
   }
 
-  private def createCloudlets(num_Cloudlets: Int, model: UtilizationModelDynamic, listbuffer: ListBuffer[Cloudlet]) : Unit = {
+  private def createCloudletsImpl(num_Cloudlets: Int, model: UtilizationModelDynamic, listbuffer: ListBuffer[Cloudlet]) : Unit = {
     if (num_Cloudlets == 0) {
       return
     }
@@ -141,5 +150,5 @@ object BasicExample:
     val cloudlet_Size : Int = config.getInt("cloudSimulator.cloudlet.size")
     val cloudlet : Cloudlet = new CloudletSimple(cloudlet_Size, cloudlet_Pes, model).setSizes(config.getInt("cloudSimulator.cloudlet.ioSizes"))
     listbuffer += cloudlet
-    createCloudlets(num_Cloudlets - 1, model, listbuffer)
+    createCloudletsImpl(num_Cloudlets - 1, model, listbuffer)
   }
