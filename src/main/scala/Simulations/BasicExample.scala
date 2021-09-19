@@ -13,6 +13,7 @@ import org.cloudbus.cloudsim.vms.{Vm, VmSimple}
 import org.cloudsimplus.builders.tables.CloudletsTableBuilder
 
 import collection.JavaConverters.*
+import scala.collection.mutable.ListBuffer
 
 class BasicExample
 
@@ -67,8 +68,20 @@ object BasicExample:
 
   private def createCloudlets() : List[Cloudlet] = {
     val utilizationModel : UtilizationModelDynamic = new UtilizationModelDynamic(config.getDouble("cloudSimulator.utilizationRatio"))
+    val num_Cloudlets : Int = config.getInt("cloudSimulator.setup.Cloudlets")
+    val cloudletList = ListBuffer.empty [Cloudlet]
+    createCloudletsImpl(num_Cloudlets, utilizationModel, cloudletList)
+//    val cloudletList : List [Cloudlet] = List(new CloudletSimple(cloudlet_Size, cloudlet_Pes, utilizationModel).setSizes(config.getInt("cloudSimulator.cloudlet.ioSizes")))
+    return cloudletList.toList
+  }
+
+  private def createCloudletsImpl(num_Cloudlets: Int, model: UtilizationModelDynamic, listbuffer: ListBuffer[Cloudlet]) : Unit = {
+    if (num_Cloudlets == 0) {
+      return
+    }
     val cloudlet_Pes : Int = config.getInt("cloudSimulator.cloudlet.PEs")
     val cloudlet_Size : Int = config.getInt("cloudSimulator.cloudlet.size")
-    val cloudletList : List [Cloudlet] = List(new CloudletSimple(cloudlet_Size, cloudlet_Pes, utilizationModel).setSizes(config.getInt("cloudSimulator.cloudlet.ioSizes")))
-    return cloudletList
+    val cloudlet : Cloudlet = new CloudletSimple(cloudlet_Size, cloudlet_Pes, model).setSizes(config.getInt("cloudSimulator.cloudlet.ioSizes"))
+    listbuffer += cloudlet
+    createCloudletsImpl(num_Cloudlets - 1, model, listbuffer)
   }
