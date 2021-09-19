@@ -57,13 +57,30 @@ object BasicExample:
   }
 
   private def createVms() : List[Vm] = {
+    val num_VMs : Int = config.getInt("cloudSimulator.setup.Vms")
+
+    val vmList = ListBuffer.empty[Vm]
+    createVmsImpl(num_VMs, vmList)
+//    val vmList : List[Vm] = List(new VmSimple(vm_Mips, vm_Pes).setRam(vm_RAM).setSize(vm_Size).setBw(vm_BW))
+    return vmList.toList
+  }
+
+  private def createVmsImpl(num_VMs: Int, listbuffer: ListBuffer[Vm]) : Unit = {
+    if (num_VMs == 0) {
+      return
+    }
+
     val vm_Mips : Int = config.getInt("cloudSimulator.vm.mipsCapacity")
     val vm_Pes : Int = config.getInt("cloudSimulator.vm.Pes")
     val vm_RAM : Int = config.getInt("cloudSimulator.vm.RAMInMBs")
     val vm_BW : Int = config.getInt("cloudSimulator.vm.StorageInMBs")
     val vm_Size : Int = config.getInt("cloudSimulator.vm.BandwidthInMBps")
-    val vmList : List[Vm] = List(new VmSimple(vm_Mips, vm_Pes).setRam(vm_RAM).setSize(vm_Size).setBw(vm_BW))
-    return vmList
+
+    val vm : Vm = new VmSimple(vm_Mips, vm_Pes).setRam(vm_RAM).setSize(vm_Size).setBw(vm_BW)
+
+    listbuffer += vm
+
+    createVmsImpl(num_VMs - 1, listbuffer)
   }
 
   private def createCloudlets() : List[Cloudlet] = {
