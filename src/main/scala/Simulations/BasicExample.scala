@@ -48,12 +48,31 @@ object BasicExample:
   }
 
   private def createHost() : Host = {
-    val Hosts : Int = config.getInt("cloudSimulator.host.mipsCapacity")
     val Host_RAM : Int = config.getInt("cloudSimulator.host.RAMInMBs")
     val Host_BW : Int = config.getInt("cloudSimulator.host.BandwidthInMBps")
     val Host_Storage : Int = config.getInt("cloudSimulator.host.StorageInMBs")
-    val peList : List[Pe] = List(new PeSimple(Hosts))
+    val Host_Pes : Int = config.getInt("cloudSimulator.host.Pes")
+    val peList : List[Pe] = createPes(Host_Pes)
+//    val peList : List[Pe] = List(new PeSimple(Hosts))
     return new HostSimple(Host_RAM, Host_BW, Host_Storage, peList.asJava);
+  }
+  
+  private def createPes(num: Int): List[Pe] ={
+    val pes = ListBuffer.empty[Pe]
+    
+    createPesImpl(num, pes)
+    
+    return pes.toList
+  }
+  
+  private def createPesImpl(num: Int, listbuffer: ListBuffer[Pe]) : Unit = {
+    if (num == 0){
+      return
+    }
+    val Hosts : Int = config.getInt("cloudSimulator.host.mipsCapacity")
+    listbuffer += new PeSimple(Hosts)
+    
+    createPesImpl(num - 1, listbuffer)
   }
 
   private def createVms() : List[Vm] = {
