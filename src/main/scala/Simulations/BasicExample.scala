@@ -12,9 +12,10 @@ import org.cloudbus.cloudsim.resources.{Pe, PeSimple}
 import org.cloudbus.cloudsim.schedulers.cloudlet.CloudletSchedulerTimeShared
 import org.cloudbus.cloudsim.schedulers.vm.{VmScheduler, VmSchedulerSpaceShared, VmSchedulerTimeShared}
 import org.cloudbus.cloudsim.utilizationmodels.UtilizationModelDynamic
-import org.cloudbus.cloudsim.vms.{Vm, VmSimple}
+import org.cloudbus.cloudsim.vms.{Vm, VmCost, VmSimple}
 import org.cloudsimplus.builders.tables.CloudletsTableBuilder
 
+import java.util.Comparator
 import collection.JavaConverters.*
 import scala.collection.mutable.ListBuffer
 
@@ -29,26 +30,39 @@ object BasicExample:
 
   val logger = CreateLogger(classOf[BasicCloudSimPlusExample]);
   private val simulation : CloudSim = new CloudSim();
+  private val broker0 : DatacenterBroker = new DatacenterBrokerSimple(simulation);
+  private val datacenter0 : Datacenter = createDatacenter();
+  private val vmList : List[Vm] = createVms();
+  private val cloudletList : List[Cloudlet] = createCloudlets();
+
 
   def Start(): Unit = {
-    val datacenter0 : Datacenter = createDatacenter();
-
-    val broker0 : DatacenterBroker = new DatacenterBrokerSimple(simulation);
-
-    val vmList : List[Vm] = createVms();
-    val cloudletList : List[Cloudlet] = createCloudlets();
     broker0.submitCloudletList(cloudletList.asJava);
     broker0.submitVmList(vmList.asJava);
 
     simulation.start();
 
-    new CloudletsTableBuilder(broker0.getCloudletFinishedList).build();
+//    new CloudletsTableBuilder(broker0.getCloudletFinishedList).build();
+//    printTotalVmsCost()
+
+    val finishedCloudlets: List[Cloudlet] = broker0.getCloudletFinishedList.asScala.toList;
+
+    //Sorts cloudlets by VM id then Cloudlet id
+    val vmComparator: Comparator[Cloudlet] = Comparator.comparingLong((c: Cloudlet) => c.getVm.getId)
+
+    new CloudletsTableBuilder(finishedCloudlets.asJava).build()
+
+    printTotalVmsCost()
   }
 
   private def createDatacenter(): Datacenter = {
     val num_hosts : Int = config.getInt("cloudSimulator.setup.Hosts")
     val hostList : List[Host] = createHosts(num_hosts)
-    return new DatacenterSimple(simulation, hostList.asJava, new VmAllocationPolicyRoundRobin());
+    val dc : Datacenter = new DatacenterSimple(simulation, hostList.asJava);
+    dc.setSchedulingInterval(1)
+    dc.getCharacteristics()
+      .setCostPerSecond(0.01).setCostPerBw(0.01).setCostPerMem(0.01).setCostPerStorage(0.1)
+    return dc
   }
 
   private def createHosts(num_hosts: Int) : List[Host] = {
@@ -76,7 +90,7 @@ object BasicExample:
     val Host_Pes : Int = config.getInt("cloudSimulator.host.Pes")
     val peList : List[Pe] = createPes(Host_Pes)
     val sch = new VmSchedulerTimeShared()
-    return new HostSimple(Host_RAM, Host_BW, Host_Storage, peList.asJava).setVmScheduler(new VmSchedulerTimeShared());
+    return new HostSimple(Host_RAM, Host_BW, Host_Storage, peList.asJava);
   }
 
   private def createPes(num: Int): List[Pe] ={
@@ -142,4 +156,26 @@ object BasicExample:
     val cloudlet : Cloudlet = new CloudletSimple(cloudlet_Size, cloudlet_Pes, model).setSizes(config.getInt("cloudSimulator.cloudlet.ioSizes"))
     listbuffer += cloudlet
     createCloudlets(num_Cloudlets - 1, model, listbuffer)
+  }
+
+  private def printTotalVmsCost() : Unit = {
+    var totalCost : Double = 0.0
+    var totalNonIdleVms : Int = 0
+    var processingTotalCost : Double = 0
+    var memoryTotalCost : Double = 0
+    var storageTotalCost : Double = 0
+    var bwTotalCost : Double = 0
+    for (vm <- broker0.getVmCreatedList.asScala){
+//      System.out.println("Debug: " + vm)
+      val cost : VmCost = new VmCost(vm)
+      processingTotalCost += cost.getProcessingCost
+      memoryTotalCost += cost.getMemoryCost
+      storageTotalCost += cost.getStorageCost
+      bwTotalCost += cost.getBwCost
+      totalCost += cost.getTotalCost
+      System.out.println(cost)
+    }
+
+    System.out.printf("Total cost ($) for %3d created VMs from %3d in DC %d: %8.2f$ %13.2f$ %17.2f$ %12.2f$ %15.2f$%n",
+      broker0.getVmCreatedList.size(), broker0.getVmsNumber, datacenter0.getId, processingTotalCost, memoryTotalCost, storageTotalCost, bwTotalCost, totalCost)
   }
