@@ -28,10 +28,10 @@ object BasicExample:
   }
 
   val logger = CreateLogger(classOf[BasicCloudSimPlusExample]);
+  private val simulation : CloudSim = new CloudSim();
 
   def Start(): Unit = {
-    val simulation : CloudSim = new CloudSim();
-    val datacenter0 : Datacenter = createDatacenter(simulation);
+    val datacenter0 : Datacenter = createDatacenter();
 
     val broker0 : DatacenterBroker = new DatacenterBrokerSimple(simulation);
 
@@ -45,10 +45,10 @@ object BasicExample:
     new CloudletsTableBuilder(broker0.getCloudletFinishedList).build();
   }
 
-  private def createDatacenter(simulation: CloudSim): Datacenter = {
+  private def createDatacenter(): Datacenter = {
     val num_hosts : Int = config.getInt("cloudSimulator.setup.Hosts")
     val hostList : List[Host] = createHosts(num_hosts)
-    return new DatacenterSimple(simulation, hostList.asJava, new VmAllocationPolicySimple());
+    return new DatacenterSimple(simulation, hostList.asJava, new VmAllocationPolicyRoundRobin());
   }
 
   private def createHosts(num_hosts: Int) : List[Host] = {
@@ -76,7 +76,7 @@ object BasicExample:
     val Host_Pes : Int = config.getInt("cloudSimulator.host.Pes")
     val peList : List[Pe] = createPes(Host_Pes)
     val sch = new VmSchedulerTimeShared()
-    return new HostSimple(Host_RAM, Host_BW, Host_Storage, peList.asJava);
+    return new HostSimple(Host_RAM, Host_BW, Host_Storage, peList.asJava).setVmScheduler(new VmSchedulerTimeShared());
   }
 
   private def createPes(num: Int): List[Pe] ={
