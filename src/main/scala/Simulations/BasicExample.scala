@@ -6,7 +6,7 @@ import org.cloudbus.cloudsim.allocationpolicies.{VmAllocationPolicyAbstract, VmA
 import org.cloudbus.cloudsim.brokers.{DatacenterBroker, DatacenterBrokerSimple}
 import org.cloudbus.cloudsim.cloudlets.{Cloudlet, CloudletSimple}
 import org.cloudbus.cloudsim.core.CloudSim
-import org.cloudbus.cloudsim.datacenters.{Datacenter, DatacenterSimple}
+import org.cloudbus.cloudsim.datacenters.{Datacenter, DatacenterCharacteristics, DatacenterSimple}
 import org.cloudbus.cloudsim.hosts.{Host, HostSimple}
 import org.cloudbus.cloudsim.resources.{Pe, PeSimple}
 import org.cloudbus.cloudsim.schedulers.cloudlet.CloudletSchedulerTimeShared
@@ -18,6 +18,7 @@ import org.cloudsimplus.builders.tables.CloudletsTableBuilder
 import java.util.Comparator
 import collection.JavaConverters.*
 import scala.collection.mutable.ListBuffer
+import scala.jdk.javaapi.CollectionConverters.asJava
 
 class BasicExample
 
@@ -31,12 +32,14 @@ object BasicExample:
   val logger = CreateLogger(classOf[BasicCloudSimPlusExample]);
   private val simulation : CloudSim = new CloudSim();
   private val broker0 : DatacenterBroker = new DatacenterBrokerSimple(simulation);
-  private val datacenter0 : Datacenter = createDatacenter();
+  private val dclist : List[Datacenter] = createDatacenter()
+//  private val datacenter0 : Datacenter = createDatacenter();
   private val vmList : List[Vm] = createVms();
   private val cloudletList : List[Cloudlet] = createCloudlets();
 
 
   def Start(): Unit = {
+
     broker0.submitCloudletList(cloudletList.asJava);
     broker0.submitVmList(vmList.asJava);
 
@@ -55,15 +58,60 @@ object BasicExample:
     printTotalVmsCost()
   }
 
-  private def createDatacenter(): Datacenter = {
-    val num_hosts : Int = config.getInt("cloudSimulator.setup.Hosts")
-    val hostList : List[Host] = createHosts(num_hosts)
-    val dc : Datacenter = new DatacenterSimple(simulation, hostList.asJava);
-    dc.setSchedulingInterval(1)
-    dc.getCharacteristics()
-      .setCostPerSecond(0.01).setCostPerBw(0.01).setCostPerMem(0.01).setCostPerStorage(0.1)
-    return dc
+  private def createDatacenter() : List[Datacenter] ={
+    val listbuffer = ListBuffer.empty[Datacenter]
+    val dcs : Int = config.getInt("cloudSimulator.setup.dcs")
+    createDatacenter(dcs, listbuffer)
+
+    return listbuffer.toList
   }
+
+  private def createDatacenter(dcs: Int, listbuffer : ListBuffer[Datacenter]) : Unit = {
+    if (dcs == 0) {
+      return
+    }
+
+    val dc_number : Int = config.getInt("cloudSimulator.setup.dcs") - dcs
+    val datacenterName : String = "datacenter" + dc_number.toString
+    val datacenterPath : String = "cloudSimulator." + datacenterName + "."
+
+    val num_hosts : Int = config.getInt(datacenterPath + "hosts")
+    val hostList : List[Host] = createHosts(num_hosts)
+//    val dc : Datacenter = new DatacenterSimple(simulation, hostList.asJava);
+    val arch            = config.getString(datacenterPath + "arch")
+    val os              = config.getString(datacenterPath + "os")
+    val vmm             = config.getString(datacenterPath + "vmm")
+    val time_zone       = config.getDouble(datacenterPath + "time_zone")
+    val cost            = config.getDouble(datacenterPath + "cost")
+    val costPerMem      = config.getDouble(datacenterPath + "cpm")
+    val costPerStorage  = config.getDouble(datacenterPath + "cps")
+    val costPerBw       = config.getDouble(datacenterPath + "cpb")
+
+//    val chars = new DatacenterCharacteristics(arch, os, vmm, asJava[Host](hostList), time_zone, cost, costPerMem, costPerStorage, costPerBw)
+    val dc = new DatacenterSimple(simulation, hostList.asJava)
+    dc.getCharacteristics
+      .setVmm(vmm).setOs(os)
+      .setArchitecture(arch)
+      .setCostPerBw(costPerBw)
+      .setCostPerMem(costPerMem)
+      .setCostPerStorage(costPerStorage)
+      .setCostPerSecond(cost)
+    dc.setName("datacenter" + dc_number.toString)
+    listbuffer += dc
+    System.out.println("Created Datacenter: " + dc.getName)
+
+    createDatacenter(dcs - 1, listbuffer)
+  }
+
+//  private def createDatacenter(): Datacenter = {
+//    val num_hosts : Int = config.getInt("cloudSimulator.setup.Hosts")
+//    val hostList : List[Host] = createHosts(num_hosts)
+//    val dc : Datacenter = new DatacenterSimple(simulation, hostList.asJava);
+//    dc.setSchedulingInterval(1)
+//    dc.getCharacteristics()
+//      .setCostPerSecond(0.01).setCostPerBw(0.01).setCostPerMem(0.01).setCostPerStorage(0.1)
+//    return dc
+//  }
 
   private def createHosts(num_hosts: Int) : List[Host] = {
     val listbuffer = ListBuffer.empty[Host]
@@ -159,15 +207,15 @@ object BasicExample:
   }
 
   private def printTotalVmsCost() : Unit = {
-    var totalCost : Double = 0.0
-    var totalNonIdleVms : Int = 0
-    var processingTotalCost : Double = 0
-    var memoryTotalCost : Double = 0
-    var storageTotalCost : Double = 0
-    var bwTotalCost : Double = 0
-    for (vm <- broker0.getVmCreatedList.asScala){
-//      System.out.println("Debug: " + vm)
-      val cost : VmCost = new VmCost(vm)
+    var totalCost: Double = 0.0
+    var totalNonIdleVms: Int = 0
+    var processingTotalCost: Double = 0
+    var memoryTotalCost: Double = 0
+    var storageTotalCost: Double = 0
+    var bwTotalCost: Double = 0
+    for (vm <- broker0.getVmCreatedList.asScala) {
+      //      System.out.println("Debug: " + vm)
+      val cost: VmCost = new VmCost(vm)
       processingTotalCost += cost.getProcessingCost
       memoryTotalCost += cost.getMemoryCost
       storageTotalCost += cost.getStorageCost
@@ -176,6 +224,7 @@ object BasicExample:
       System.out.println(cost)
     }
 
-    System.out.printf("Total cost ($) for %3d created VMs from %3d in DC %d: %8.2f$ %13.2f$ %17.2f$ %12.2f$ %15.2f$%n",
-      broker0.getVmCreatedList.size(), broker0.getVmsNumber, datacenter0.getId, processingTotalCost, memoryTotalCost, storageTotalCost, bwTotalCost, totalCost)
+
+//        System.out.printf("Total cost ($) for %3d created VMs from %3d in DC %d: %8.2f$ %13.2f$ %17.2f$ %12.2f$ %15.2f$%n",
+//          broker0.getVmCreatedList.size(), broker0.getVmsNumber, datacenter0.getId, processingTotalCost, memoryTotalCost, storageTotalCost, bwTotalCost, totalCost)
   }
