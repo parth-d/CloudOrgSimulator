@@ -2,19 +2,21 @@ package Simulations
 
 import HelperUtils.{CreateLogger, ObtainConfigReference}
 import Simulations.BasicExample.config
+import ch.qos.logback.classic.Level
 import com.typesafe.config.ConfigFactory
-import org.cloudbus.cloudsim.allocationpolicies.{VmAllocationPolicyAbstract, VmAllocationPolicyRoundRobin, VmAllocationPolicySimple}
+import org.cloudbus.cloudsim.allocationpolicies.{VmAllocationPolicy, VmAllocationPolicyAbstract, VmAllocationPolicyRoundRobin, VmAllocationPolicySimple}
 import org.cloudbus.cloudsim.brokers.{DatacenterBroker, DatacenterBrokerSimple}
 import org.cloudbus.cloudsim.cloudlets.{Cloudlet, CloudletSimple}
 import org.cloudbus.cloudsim.core.CloudSim
 import org.cloudbus.cloudsim.datacenters.{Datacenter, DatacenterCharacteristics, DatacenterSimple}
 import org.cloudbus.cloudsim.hosts.{Host, HostSimple}
 import org.cloudbus.cloudsim.resources.{Pe, PeSimple}
-import org.cloudbus.cloudsim.schedulers.cloudlet.CloudletSchedulerTimeShared
+import org.cloudbus.cloudsim.schedulers.cloudlet.{CloudletScheduler, CloudletSchedulerTimeShared}
 import org.cloudbus.cloudsim.schedulers.vm.{VmScheduler, VmSchedulerSpaceShared, VmSchedulerTimeShared}
 import org.cloudbus.cloudsim.utilizationmodels.UtilizationModelDynamic
 import org.cloudbus.cloudsim.vms.{Vm, VmCost, VmSimple}
 import org.cloudsimplus.builders.tables.CloudletsTableBuilder
+import org.cloudsimplus.util.Log
 
 import java.util.Comparator
 import collection.JavaConverters.*
@@ -32,7 +34,7 @@ object BasicExample:
 //  }
 
 
-  val logger = CreateLogger(classOf[BasicCloudSimPlusExample]);
+  val logger = CreateLogger(classOf[BasicExample]);
   private val simulation : CloudSim = new CloudSim();
   private val broker0 : DatacenterBroker = new DatacenterBrokerSimple(simulation);
   private val dclist : List[Datacenter] = createDatacenter()
@@ -46,10 +48,8 @@ object BasicExample:
     broker0.submitCloudletList(cloudletList.asJava);
     broker0.submitVmList(vmList.asJava);
 
+    configureLogs();
     simulation.start();
-
-//    new CloudletsTableBuilder(broker0.getCloudletFinishedList).build();
-//    printTotalVmsCost()
 
     val finishedCloudlets: List[Cloudlet] = broker0.getCloudletFinishedList.asScala.toList;
 
@@ -59,6 +59,15 @@ object BasicExample:
     new CloudletsTableBuilder(finishedCloudlets.asJava).build()
 
     printTotalVmsCost()
+  }
+
+  private def configureLogs() : Unit = {
+    Log.setLevel(Level.INFO)
+
+    Log.setLevel(Datacenter.LOGGER, Level.ERROR)
+    Log.setLevel(DatacenterBroker.LOGGER, Level.WARN)
+    Log.setLevel(VmAllocationPolicy.LOGGER, Level.WARN)
+    Log.setLevel(CloudletScheduler.LOGGER, Level.WARN)
   }
 
   private def createDatacenter() : List[Datacenter] ={
