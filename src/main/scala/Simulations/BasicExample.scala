@@ -2,6 +2,7 @@ package Simulations
 
 import HelperUtils.{CreateLogger, ObtainConfigReference}
 import Simulations.BasicExample.config
+import com.typesafe.config.ConfigFactory
 import org.cloudbus.cloudsim.allocationpolicies.{VmAllocationPolicyAbstract, VmAllocationPolicyRoundRobin, VmAllocationPolicySimple}
 import org.cloudbus.cloudsim.brokers.{DatacenterBroker, DatacenterBrokerSimple}
 import org.cloudbus.cloudsim.cloudlets.{Cloudlet, CloudletSimple}
@@ -23,11 +24,13 @@ import scala.jdk.javaapi.CollectionConverters.asJava
 class BasicExample
 
 object BasicExample:
+  val config = ConfigFactory.load("BasicExample.conf")
 
-  val config = ObtainConfigReference("cloudSimulator") match {
-    case Some(value) => value
-    case None => throw new RuntimeException("Cannot obtain a reference to the config data.")
-  }
+//  val config = ObtainConfigReference("BasicExample") match {
+//    case Some(value) => value
+//    case None => throw new RuntimeException("Cannot obtain a reference to the config data.")
+//  }
+
 
   val logger = CreateLogger(classOf[BasicCloudSimPlusExample]);
   private val simulation : CloudSim = new CloudSim();
