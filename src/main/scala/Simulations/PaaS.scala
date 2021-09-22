@@ -60,7 +60,12 @@ object PaaS:
     //    new CloudletsTableBuilder(finishedCloudlets.asJava).build()
 
 //    printTotalVmsCost(broker)
-    results.addOne(new VmCost(broker.getVmCreatedList.get(0)).getTotalCost)
+    var vm_cost_sum : Double = 0
+    for (vm <- broker.getVmCreatedList.asScala){
+      val vm_cost = new VmCost(vm)
+      vm_cost_sum = vm_cost_sum + vm_cost.getTotalCost
+    }
+    results.addOne(vm_cost_sum)
   }
 
   private def createDatacenter(simulation_number: Int, simulation: CloudSim) : Datacenter = {
@@ -128,8 +133,8 @@ object PaaS:
     val vm_Mips : Int   = config.getInt("PaaS.CloudProviderProperties.vm" + simulation_number + ".mipsCapacity")
     val vm_Pes : Int    = config.getInt("PaaS.CloudProviderProperties.vm" + simulation_number + ".pes")
     val vm_RAM : Int    = config.getInt("PaaS.CloudProviderProperties.vm" + simulation_number + ".RAMInMBs")
-    val vm_BW : Int     = config.getInt("PaaS.CloudProviderProperties.vm" + simulation_number + ".StorageInMBs")
-    val vm_Size : Int   = config.getInt("PaaS.CloudProviderProperties.vm" + simulation_number + ".BandwidthInMBps")
+    val vm_BW : Int     = config.getInt("PaaS.CloudProviderProperties.vm" + simulation_number + ".BandwidthInMBps")
+    val vm_Size : Int   = config.getInt("PaaS.CloudProviderProperties.vm" + simulation_number + ".StorageInMBs")
 
     val vm : Vm = new VmSimple(vm_Mips, vm_Pes).setRam(vm_RAM).setSize(vm_Size).setBw(vm_BW)
     val cl_sch = cloudletsch

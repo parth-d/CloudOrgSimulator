@@ -1,5 +1,5 @@
 import HelperUtils.{CreateLogger, ObtainConfigReference}
-import Simulations.{BasicExample, PaaS, SaaS}
+import Simulations.{BasicExample, IaaS, PaaS, SaaS}
 import com.typesafe.config.ConfigFactory
 import org.slf4j.LoggerFactory
 
@@ -11,6 +11,7 @@ object Simulation:
 
     SaaS.StartSimulation()
     PaaS.StartSimulation()
+    IaaS.StartSimulation()
 //    BasicExample.Start()
 
     logger.info("Finished cloud simulation...")
