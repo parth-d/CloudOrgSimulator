@@ -68,14 +68,14 @@ object SaaS:
   val results = ListBuffer.empty[Double]
 
   // Main function to be executed
-  def StartSimulation() : Unit = {
+  def StartSimulation() : String = {
     System.out.println("Currently executing SaaS")
 
     // Iterating over the 3 possible options for the broker
     for (i <- 0 to 2){
       Start(i)
     }
-    println("\n\nResult:\nThe minimum cost (SaaS) required to execute the required cloudlets is $" + results.toList.min.round)
+    return("\n\nResult for SaaS:\nThe minimum cost required to execute the required cloudlets is $" + results.toList.min)
   }
 
   // Main function to be executed
@@ -305,11 +305,11 @@ object SaaS:
    * If needed, please change the values of the levels individually for granular control of what to log
    */
   private def configureLogs() : Unit = {
-    Log.setLevel(Level.OFF)
-    Log.setLevel(Datacenter.LOGGER, Level.OFF)
-    Log.setLevel(DatacenterBroker.LOGGER, Level.OFF)
-    Log.setLevel(VmAllocationPolicy.LOGGER, Level.OFF)
-    Log.setLevel(CloudletScheduler.LOGGER, Level.OFF)
+    Log.setLevel(Level.INFO)
+    Log.setLevel(Datacenter.LOGGER, Level.INFO)
+    Log.setLevel(DatacenterBroker.LOGGER, Level.INFO)
+    Log.setLevel(VmAllocationPolicy.LOGGER, Level.INFO)
+    Log.setLevel(CloudletScheduler.LOGGER, Level.INFO)
   }
 
   /**

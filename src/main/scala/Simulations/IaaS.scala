@@ -35,19 +35,19 @@ import scala.collection.mutable.ListBuffer
  *        b. RAM            : 1024 MB
  *        c. Storage        : 1024 MB
  *        d. Bandwidth      : 1000 MBps
- *        e. PEs            : 4
+ *        e. PEs            : 8
  *     2. Medium: Cost set to $0.25 per unit for all resources
  *        a. mips Capacity  : 2000
  *        b. RAM            : 2048 MB
  *        c. Storage        : 2048 MB
  *        d. Bandwidth      : 2000 MBps
- *        e. PEs            : 4
+ *        e. PEs            : 8
  *     3. Fast: Cost set to $0.70 per unit for all resources
  *        a. mips Capacity  : 4000
  *        b. RAM            : 4096 MB
  *        c. Storage        : 4096 MB
  *        d. Bandwidth      : 4000 MBps
- *        e. PEs            : 8
+ *        e. PEs            : 16
  *
  * The Cloud provider sets the following parameters:
  *    i. VM Allocation Policy  : Best Fit
@@ -70,7 +70,7 @@ object IaaS:
   var cloudletsch = "CloudletSchedulerTimeShared"
 
   // Main function to be executed
-  def StartSimulation() : Unit = {
+  def StartSimulation() : String = {
     System.out.println("Currently executing IaaS")
 
     // Iterating over the 12 possible options for the broker (Toggling VM and Cloudlet Schedulers along with configs)
@@ -93,7 +93,7 @@ object IaaS:
     for (i <- 0 to 2){
       Start(i)
     }
-    println("\n\nResult:\nThe minimum cost (IaaS) required to execute the required cloudlets is " + results.toList.min)
+    return ("\n\nResult for IaaS:\nThe minimum cost required to execute the required cloudlets is $" + results.toList.min)
   }
 
 
@@ -354,11 +354,11 @@ object IaaS:
    * If needed, please change the values of the levels individually for granular control of what to log
    */
   private def configureLogs() : Unit = {
-    Log.setLevel(Level.OFF)
-    Log.setLevel(Datacenter.LOGGER, Level.OFF)
-    Log.setLevel(DatacenterBroker.LOGGER, Level.OFF)
-    Log.setLevel(VmAllocationPolicy.LOGGER, Level.OFF)
-    Log.setLevel(CloudletScheduler.LOGGER, Level.OFF)
+    Log.setLevel(Level.INFO)
+    Log.setLevel(Datacenter.LOGGER, Level.INFO)
+    Log.setLevel(DatacenterBroker.LOGGER, Level.INFO)
+    Log.setLevel(VmAllocationPolicy.LOGGER, Level.INFO)
+    Log.setLevel(CloudletScheduler.LOGGER, Level.INFO)
   }
 
   /**

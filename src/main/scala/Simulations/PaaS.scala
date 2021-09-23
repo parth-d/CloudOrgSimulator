@@ -70,7 +70,7 @@ object PaaS:
   val results = ListBuffer.empty[Double]
 
   // Main function to be executed
-  def StartSimulation() : Unit = {
+  def StartSimulation() : String = {
     System.out.println("Currently executing PaaS")
 
     // Iterating over the 6 possible options for the broker (Toggling Cloudlet Scheduler along with configs)
@@ -82,7 +82,7 @@ object PaaS:
     for (i <- 0 to 2){
       Start(i)
     }
-    println("\n\nResult:\nThe minimum cost (PaaS) required to execute the required cloudlets is " + results.toList.min)
+    return ("\n\nResult for PaaS:\nThe minimum cost required to execute the required cloudlets is $" + results.toList.min)
   }
 
   def Start(simulation_number : Int) : Unit = {
@@ -310,11 +310,11 @@ object PaaS:
    * If needed, please change the values of the levels individually for granular control of what to log
    */
   private def configureLogs() : Unit = {
-    Log.setLevel(Level.OFF)
-    Log.setLevel(Datacenter.LOGGER, Level.OFF)
-    Log.setLevel(DatacenterBroker.LOGGER, Level.OFF)
-    Log.setLevel(VmAllocationPolicy.LOGGER, Level.OFF)
-    Log.setLevel(CloudletScheduler.LOGGER, Level.OFF)
+    Log.setLevel(Level.INFO)
+    Log.setLevel(Datacenter.LOGGER, Level.INFO)
+    Log.setLevel(DatacenterBroker.LOGGER, Level.INFO)
+    Log.setLevel(VmAllocationPolicy.LOGGER, Level.INFO)
+    Log.setLevel(CloudletScheduler.LOGGER, Level.INFO)
   }
 
   /**

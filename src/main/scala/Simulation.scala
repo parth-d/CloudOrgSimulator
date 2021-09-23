@@ -13,20 +13,24 @@ object Simulation:
   val logger = CreateLogger(classOf[Simulation])
 
   @main def runSimulations =
-    logger.info("Run the simulations")
-
-    // Run the simulations serially.
-//    SaaS.StartSimulation()
-//    PaaS.StartSimulation()
-    IaaS.StartSimulation()
-
-    logger.info("Simulations exeution done")
-
-    logger.info("\n\nProceeding to run the converted examples from Java to Scala")
+    logger.info("\n\nRunning the converted examples from Java to Scala")
 
     // Run the converted examples (Java to Scala)
-//    ConvertedToScala.Start()
+    ConvertedToScala.Start()
 
     logger.info("Finished execution.")
+
+    logger.info("Now, running the simulations")
+
+    // Run the simulations serially.
+    val SaaSResult : String = SaaS.StartSimulation()
+    val PaaSResult : String = PaaS.StartSimulation()
+    val IaaSResult : String = IaaS.StartSimulation()
+
+    System.out.println(SaaSResult)
+    System.out.println(PaaSResult)
+    System.out.println(IaaSResult)
+
+    logger.info("Simulations execution done")
 
 class Simulation
