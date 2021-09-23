@@ -311,10 +311,10 @@ object PaaS:
    */
   private def configureLogs() : Unit = {
     Log.setLevel(Level.INFO)
-    Log.setLevel(Datacenter.LOGGER, Level.INFO)
-    Log.setLevel(DatacenterBroker.LOGGER, Level.INFO)
-    Log.setLevel(VmAllocationPolicy.LOGGER, Level.INFO)
-    Log.setLevel(CloudletScheduler.LOGGER, Level.INFO)
+    Log.setLevel(Datacenter.LOGGER, Level.ERROR)
+    Log.setLevel(DatacenterBroker.LOGGER, Level.WARN)
+    Log.setLevel(VmAllocationPolicy.LOGGER, Level.OFF)
+    Log.setLevel(CloudletScheduler.LOGGER, Level.WARN)
   }
 
   /**
