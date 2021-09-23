@@ -50,8 +50,8 @@ import scala.collection.mutable.ListBuffer
  *
  * The Cloud provider sets the following parameters:
  *    i.    VM Scheduler          : Time Shared
- *    ii.   Cloudlet Scheduler    : Space Shared
- *    iii.  VM Allocation Policy  : Best Fit
+ *    i.    Cloudlet Scheduler    : Space Shared
+ *    i.    VM Allocation Policy  : Best Fit
  */
 
 class SaaS
@@ -61,7 +61,7 @@ object SaaS:
   // Set the file name for the configuration file for this execution
   val config = ConfigFactory.load("Simulations.conf")
 
-  // Crete a logger object to set logger properties and show the logs in the output
+  // Create a logger object to set logger properties and show the logs in the output
   val logger = CreateLogger(classOf[SaaS])
 
   // Create a result ListBuffer to append the results and find minimum

@@ -28,7 +28,7 @@ import scala.collection.mutable.ListBuffer
  *
  * The broker decides the following parameters:
  *    i. Cloudlet Scheduler
- *    i. Choice of execution speed:
+ *    i. Choice of VM Configurations:
  *      1. Slow: Cost set to $0.1 per unit for all resources
  *        a. mips Capacity  : 1000
  *        b. RAM            : 1024 MB
@@ -50,8 +50,9 @@ import scala.collection.mutable.ListBuffer
  *
  * The Cloud provider sets the following parameters:
  *    i.  VM Scheduler          : Time Shared
- *    ii. VM Allocation Policy  : Best Fit
+ *    i.  VM Allocation Policy  : Best Fit
  */
+
 class PaaS
 
 object PaaS:
@@ -59,7 +60,7 @@ object PaaS:
   // Set the file name for the configuration file for this execution
   val config = ConfigFactory.load("Simulations.conf")
 
-  // Crete a logger object to set logger properties and show the logs in the output
+  // Create a logger object to set logger properties and show the logs in the output
   val logger = CreateLogger(classOf[PaaS]);
   
   // Value to be toggled for iterations
@@ -72,7 +73,7 @@ object PaaS:
   def StartSimulation() : Unit = {
     System.out.println("Currently executing PaaS")
 
-    // Iterating over the 6 possible options for the broker
+    // Iterating over the 6 possible options for the broker (Toggling Cloudlet Scheduler along with configs)
     for (i <- 0 to 2){
       Start(i)
     }
@@ -237,6 +238,7 @@ object PaaS:
    * @return VM object
    */
   private def createVm(simulation_number : Int) : Vm = {
+    // Read and store properties in their respective variables
     val vm_Mips : Int   = config.getInt("PaaS.CloudProviderProperties.vm" + simulation_number + ".mipsCapacity")
     val vm_Pes : Int    = config.getInt("PaaS.CloudProviderProperties.vm" + simulation_number + ".pes")
     val vm_RAM : Int    = config.getInt("PaaS.CloudProviderProperties.vm" + simulation_number + ".RAMInMBs")

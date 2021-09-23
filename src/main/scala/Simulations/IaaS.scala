@@ -21,17 +21,59 @@ import collection.JavaConverters.*
 import java.util.Comparator
 import scala.collection.mutable.ListBuffer
 
+/**
+ * This simulation is used to simulate a Infrastructure-as-a-Service Cloud
+ *
+ * The total cost is calculated for each option and the cheapest cost is printed to the console
+ *
+ * The broker decides the following parameters:
+ *    i. Cloudlet Scheduler
+ *    i. VM Scheduler
+ *    i. Choice of host configurations:
+ *      1. Slow: Cost set to $0.1 per unit for all resources
+ *        a. mips Capacity  : 1000
+ *        b. RAM            : 1024 MB
+ *        c. Storage        : 1024 MB
+ *        d. Bandwidth      : 1000 MBps
+ *        e. PEs            : 4
+ *     2. Medium: Cost set to $0.25 per unit for all resources
+ *        a. mips Capacity  : 2000
+ *        b. RAM            : 2048 MB
+ *        c. Storage        : 2048 MB
+ *        d. Bandwidth      : 2000 MBps
+ *        e. PEs            : 4
+ *     3. Fast: Cost set to $0.70 per unit for all resources
+ *        a. mips Capacity  : 4000
+ *        b. RAM            : 4096 MB
+ *        c. Storage        : 4096 MB
+ *        d. Bandwidth      : 4000 MBps
+ *        e. PEs            : 8
+ *
+ * The Cloud provider sets the following parameters:
+ *    i. VM Allocation Policy  : Best Fit
+ */
+
 class IaaS
 
 object IaaS:
+  // Set the file name for the configuration file for this execution
   val config = ConfigFactory.load("Simulations.conf")
+
+  // Set the file name for the configuration file for this execution
   val logger = CreateLogger(classOf[IaaS]);
+
+  // Create a result ListBuffer to append the results and find minimum
   val results = ListBuffer.empty[Double]
+
+  // Values to be toggled for iterations
   var vmsch = "VmSchedulerTimeShared"
   var cloudletsch = "CloudletSchedulerTimeShared"
 
+  // Main function to be executed
   def StartSimulation() : Unit = {
     System.out.println("Currently executing IaaS")
+
+    // Iterating over the 12 possible options for the broker (Toggling VM and Cloudlet Schedulers along with configs)
     for (i <- 0 to 2){
       Start(i)
     }
@@ -54,26 +96,47 @@ object IaaS:
     println("\n\nResult:\nThe minimum cost (IaaS) required to execute the required cloudlets is " + results.toList.min)
   }
 
+
   def Start(simulation_number : Int) : Unit = {
-//    System.out.println("\n\nCurrent Config:")
-//    System.out.println("\t Cloudlet Scheduler: " + cloudletsch)
-//    System.out.println("\t VM Scheduler: " + vmsch)
-//    System.out.println("\t VM Config Code: " + simulation_number)
-    val simulation : CloudSim = new CloudSim();
-    val broker : DatacenterBroker = new DatacenterBrokerSimple(simulation);
-    val datacenter : Datacenter = createDatacenter(simulation_number, simulation)
-    val vmList : List[Vm] = createVm(simulation_number)
+
+    System.out.println("\n\nCurrent Config:")
+    System.out.println("\t Cloudlet Scheduler: " + cloudletsch)
+    System.out.println("\t VM Scheduler: " + vmsch)
+    System.out.println("\t VM Config Code: " + simulation_number)
+
+    // Create the necessary objects
+    val simulation : CloudSim         = new CloudSim();
+    val broker : DatacenterBroker     = new DatacenterBrokerSimple(simulation);
+    val datacenter : Datacenter       = createDatacenter(simulation_number, simulation)
+    val vmList : List[Vm]             = createVm(simulation_number)
     val cloudletList : List[Cloudlet] = createCloudlets()
+
+    // Submit the VM and Cloudlet list to the broker for it to process
     broker.submitCloudletList(cloudletList.asJava)
     broker.submitVmList(vmList.asJava)
+
+    // Call the function which sets the required levels for the log file
     configureLogs();
+
+    // Start the simulation
     simulation.start();
+
+    /**
+     * Generate a list of cloudlets which have finished the execution successfully
+     * This is required to produce the outputs in the console
+     */
     val finishedCloudlets: List[Cloudlet] = broker.getCloudletFinishedList.asScala.toList;
+
+    // Sort the cloudlets first by the Cloudlet ID an then by the VM ID
     val vmComparator: Comparator[Cloudlet] = Comparator.comparingLong((c: Cloudlet) => c.getVm.getId)
 
-//        new CloudletsTableBuilder(finishedCloudlets.asJava).build()
+    // Create a table output in the console displaying the properties of the finished cloudlets
+    new CloudletsTableBuilder(finishedCloudlets.asJava).build()
 
-//        printTotalVmsCost(broker)
+    // Call the function to print the costs associated with running each VMs and then the total cost
+    printTotalVmsCost(broker)
+
+    // Logic to calculate the total cost for this implementation
     var vm_cost_sum : Double = 0
     for (vm <- broker.getVmCreatedList.asScala){
       val vm_cost = new VmCost(vm)
@@ -82,12 +145,20 @@ object IaaS:
     results.addOne(vm_cost_sum)
   }
 
+  /**
+   * This function creates datacenter objects by reading the required parameters from the config file.
+   * The parameters are pulled for the specific configuration currently being executed
+   * @param simulation_number Current execution
+   * @param simulation Current Cloudsim object
+   * @return Datacenter object
+   */
   private def createDatacenter(simulation_number: Int, simulation: CloudSim) : Datacenter = {
+    // Create a string holding a partial path to the datacenter's properties to be read from the config
     val datacenterName : String = "datacenter" + simulation_number.toString
-    val datacenterPath : String = "IaaS.CloudProviderProperties." + datacenterName + "."
+    val datacenterPath : String = "PaaS.CloudProviderProperties." + datacenterName + "."
 
+    // Read and store properties in their respective variables
     val num_hosts : Int = config.getInt(datacenterPath + "hosts")
-    val hostList : List[Host] = List(createHost(simulation_number))
     val arch            = config.getString(datacenterPath + "arch")
     val os              = config.getString(datacenterPath + "os")
     val vmm             = config.getString(datacenterPath + "vmm")
@@ -97,7 +168,13 @@ object IaaS:
     val costPerStorage  = config.getDouble(datacenterPath + "cps")
     val costPerBw       = config.getDouble(datacenterPath + "cpb")
 
+    //Create the hosts required for the datacenter
+    val hostList : List[Host] = List(createHost(simulation_number))
+
+    // Create a simple datacenter
     val dc = new DatacenterSimple(simulation, hostList.asJava)
+
+    // Set the previously read characteristics to dc
     dc.getCharacteristics
       .setVmm(vmm).setOs(os)
       .setArchitecture(arch)
@@ -105,17 +182,29 @@ object IaaS:
       .setCostPerMem(costPerMem)
       .setCostPerStorage(costPerStorage)
       .setCostPerSecond(cost)
-    dc.setVmAllocationPolicy(new VmAllocationPolicyBestFit)
     dc.setName("datacenter" + simulation_number.toString)
+
+    // Set the allocation policy to best fit
+    dc.setVmAllocationPolicy(new VmAllocationPolicyBestFit)
     return dc
   }
 
+  /**
+   * This function creates a host object by reading the required parameters from the config file.
+   * The parameters are pulled for the specific configuration currently being executed
+   * @return
+   */
   private def createHost(simulation_number : Int) : Host = {
+    // Read and store properties in their respective variables
     val Host_RAM : Int      = config.getInt("IaaS.CloudProviderProperties.host" + simulation_number + ".RAMInMBs")
     val Host_BW : Int       = config.getInt("IaaS.CloudProviderProperties.host" + simulation_number + ".BandwidthInMBps")
     val Host_Storage : Int  = config.getInt("IaaS.CloudProviderProperties.host" + simulation_number + ".StorageInMBs")
     val Host_Pes : Int      = config.getInt("IaaS.CloudProviderProperties.host" + simulation_number + ".Pes")
+
+    // Create required number of processing elements for the host
     val peList : List[Pe]   = createPes(Host_Pes, simulation_number)
+
+    // Set the VM Scheduler based on the current iteration
     val vm_sch = vmsch
     if (vm_sch == "VmSchedulerTimeShared"){
       return new HostSimple(Host_RAM, Host_BW, Host_Storage, peList.asJava).setVmScheduler(new VmSchedulerTimeShared());
@@ -125,14 +214,26 @@ object IaaS:
     }
   }
 
+  /**
+   * This method is used to return a list of created processing elements to the host.
+   * It creates a ListBuffer object and passes it to the implementing function createPes
+   * Once the processing elements are created and added to the buffer, it converts the buffer to list and returns it
+   * @param num Number of processing elements to be created
+   * @return List of processing elements
+   */
   private def createPes(num: Int, simulation_number : Int): List[Pe] ={
     val pes = ListBuffer.empty[Pe]
 
+    // Call the implementation function passing the number of processing elements to be created along with the ListBuffer
     createPes(num, pes, simulation_number)
-
     return pes.toList
   }
 
+  /**
+   * This function recursively creates processing elements with the specified value of mipsCapacity in the config
+   * @param num Number of processing elements to be created
+   * @param listbuffer ListBuffer holding the created processing elements
+   */
   private def createPes(num: Int, listbuffer: ListBuffer[Pe], simulation_number : Int) : Unit = {
     if (num == 0){
       return
@@ -142,27 +243,50 @@ object IaaS:
 
     createPes(num - 1, listbuffer, simulation_number)
   }
-  private def createVm(simulation_number : Int) : List[Vm] = {
-    val num_VMs : Int = config.getInt("IaaS.BrokerProperties.logic.num_vms")
 
+  /**
+   * This method is used to return a list of created processing elements to the host.
+   * It creates a ListBuffer object and passes it to the implementing function createPes
+   * Once the processing elements are created and added to the buffer, it converts the buffer to list and returns it
+   * @param simulation_number Current execution
+   * @return List of VM objects
+   */
+  private def createVm(simulation_number : Int) : List[Vm] = {
+
+    val num_VMs : Int = config.getInt("IaaS.BrokerProperties.logic.num_vms")
     val vmList = ListBuffer.empty[Vm]
+
+    // Call the implementation function passing the number of hosts to be created along with the ListBuffer
     createVm(simulation_number, num_VMs, vmList)
-    //    val vmList : List[Vm] = List(new VmSimple(vm_Mips, vm_Pes).setRam(vm_RAM).setSize(vm_Size).setBw(vm_BW))
     return vmList.toList
   }
 
+  /**
+   * This function creates a VM object by reading the required parameters from the config file.
+   * The parameters are pulled for the specific configuration currently being executed
+   * @param simulation_number Current execution
+   * @param num_vms Number of remaining VMs
+   * @param vmList ListBuffer containing created VMs
+   */
   private def createVm(simulation_number : Int, num_vms : Int, vmList : ListBuffer[Vm]) : Unit = {
     if (num_vms == 0){
       return
     }
+
+    // Equally dividing the available resources considering the number of VMs and utilization ratio
     val reduction_factor : Int = (config.getInt("IaaS.BrokerProperties.logic.num_vms")/config.getDouble("IaaS.utilizationRatio")).toInt
+
+    // Read and store properties in their respective variables
     val vm_Pes : Int    = config.getInt("IaaS.CloudProviderProperties.host" + simulation_number + ".Pes")/config.getInt("IaaS.BrokerProperties.logic.num_vms")
     val vm_Mips : Int   = config.getInt("IaaS.CloudProviderProperties.host" + simulation_number + ".mipsCapacity")/reduction_factor
     val vm_RAM : Int    = config.getInt("IaaS.CloudProviderProperties.host" + simulation_number + ".RAMInMBs")/reduction_factor
     val vm_BW : Int     = config.getInt("IaaS.CloudProviderProperties.host" + simulation_number + ".BandwidthInMBps")/reduction_factor
     val vm_Size : Int   = config.getInt("IaaS.CloudProviderProperties.host" + simulation_number + ".StorageInMBs")/reduction_factor
 
+    // Create a Simple VM object and set its properties
     val vm : Vm = new VmSimple(vm_Mips, vm_Pes).setRam(vm_RAM).setSize(vm_Size).setBw(vm_BW)
+
+    // Set the Cloudlet Scheduler based on the config parameter
     val cl_sch = cloudletsch
     if (cl_sch == "CloudletSchedulerTimeShared"){
       vm.setCloudletScheduler(new CloudletSchedulerTimeShared)
@@ -171,56 +295,93 @@ object IaaS:
       vm.setCloudletScheduler(new CloudletSchedulerSpaceShared)
     }
 
+    // Append created VM to the ListBuffer
     vmList += vm
 
+    // Recursive call
     createVm(simulation_number, num_vms - 1, vmList)
 
   }
 
+  /**
+   * This method is used to return a list of created Cloudlets.
+   * It creates a ListBuffer object and passes it to the implementing function createCloudlets
+   * Once the cloudlets are created and added to the buffer, it converts the buffer to list and returns it
+   * @return List of cloudlets
+   */
   private def createCloudlets() : List[Cloudlet] = {
-    val utilizationModel : UtilizationModelDynamic = new UtilizationModelDynamic(config.getDouble("IaaS.utilizationRatio"))
-    val num_Cloudlets : Int = config.getInt("IaaS.BrokerProperties.cloudlet.number")
+    // The utilization model object is created based on the utilization ratio specified in the config
+    val utilizationModel : UtilizationModelDynamic = new UtilizationModelDynamic(config.getDouble("PaaS.utilizationRatio"))
+
+    val num_Cloudlets : Int = config.getInt("PaaS.BrokerProperties.cloudlet.number")
+
     val cloudletList = ListBuffer.empty [Cloudlet]
+
     createCloudlets(num_Cloudlets, utilizationModel, cloudletList)
     return cloudletList.toList
   }
 
+  /**
+   * This is a recursive implementation of createCloudlets which calls createCloudlets() and appends the created cloudlet
+   * to the ListBuffer
+   * This function is recursively called until the number of cloudlets remaining to be created (num_Cloudlets : Int) becomes 0
+   * @param num_Cloudlets number of remaining VMs to be created
+   * @param model Utilization Model Object
+   * @param listbuffer holding the VMs created
+   */
   private def createCloudlets(num_Cloudlets: Int, model: UtilizationModelDynamic, listbuffer: ListBuffer[Cloudlet]) : Unit = {
     if (num_Cloudlets == 0) {
       return
     }
-    val cloudlet_Pes : Int = config.getInt("IaaS.BrokerProperties.cloudlet.pes")
-    val cloudlet_Size : Int = config.getInt("IaaS.BrokerProperties.cloudlet.size")
-    val cloudlet : Cloudlet = new CloudletSimple(cloudlet_Size, cloudlet_Pes, model).setSizes(config.getInt("IaaS.BrokerProperties.cloudlet.filesize"))
+
+    // Read and store properties in their respective variables
+    val cloudlet_Pes : Int = config.getInt("PaaS.BrokerProperties.cloudlet.pes")
+    val cloudlet_Size : Int = config.getInt("PaaS.BrokerProperties.cloudlet.size")
+    val cloudletFileSize : Int  = config.getInt("cloudSimulator.cloudlet.ioSizes")
+
+    // Create a Simple Cloudlet object and set its properties
+    val cloudlet : Cloudlet = new CloudletSimple(cloudlet_Size, cloudlet_Pes, model).setSizes(cloudletFileSize)
+
+    // Add the datacenter to ListBuffer
     listbuffer += cloudlet
+
+    //Recursive Call
     createCloudlets(num_Cloudlets - 1, model, listbuffer)
   }
 
-
+  /**
+   * This function defines the levels for the resource types in the simulation
+   * If needed, please change the values of the levels individually for granular control of what to log
+   */
   private def configureLogs() : Unit = {
     Log.setLevel(Level.OFF)
-
     Log.setLevel(Datacenter.LOGGER, Level.OFF)
     Log.setLevel(DatacenterBroker.LOGGER, Level.OFF)
     Log.setLevel(VmAllocationPolicy.LOGGER, Level.OFF)
     Log.setLevel(CloudletScheduler.LOGGER, Level.OFF)
   }
 
+  /**
+   * This function calculates the total cost of running the VMs for each VM and then prints the costs accordingly
+   */
   private def printTotalVmsCost(broker : DatacenterBroker) : Unit = {
-    var totalCost: Double = 0.0
-    var totalNonIdleVms: Int = 0
+
+    // Initialize variables
+    var totalCost: Double           = 0
+    var totalNonIdleVms: Int        = 0
     var processingTotalCost: Double = 0
-    var memoryTotalCost: Double = 0
-    var storageTotalCost: Double = 0
-    var bwTotalCost: Double = 0
+    var memoryTotalCost: Double     = 0
+    var storageTotalCost: Double    = 0
+    var bwTotalCost: Double         = 0
+
+    // For each VM object, create a VmCost object and extract the costs and prints it
     for (vm <- broker.getVmCreatedList.asScala) {
-      //      System.out.println("Debug: " + vm)
-      val cost: VmCost = new VmCost(vm)
-      processingTotalCost += cost.getProcessingCost
-      memoryTotalCost += cost.getMemoryCost
-      storageTotalCost += cost.getStorageCost
-      bwTotalCost += cost.getBwCost
-      totalCost += cost.getTotalCost
+      val cost: VmCost      = new VmCost(vm)
+      processingTotalCost   += cost.getProcessingCost
+      memoryTotalCost       += cost.getMemoryCost
+      storageTotalCost      += cost.getStorageCost
+      bwTotalCost           += cost.getBwCost
+      totalCost             += cost.getTotalCost
       System.out.println(cost)
     }
   }
