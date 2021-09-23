@@ -316,21 +316,23 @@ object SaaS:
    * This function calculates the total cost of running the VMs for each VM and then prints the costs accordingly
    */
   private def printTotalVmsCost(broker : DatacenterBroker) : Unit = {
-    var totalCost: Double = 0.0
-    var totalNonIdleVms: Int = 0
+
+    // Initialize variables
+    var totalCost: Double           = 0
+    var totalNonIdleVms: Int        = 0
     var processingTotalCost: Double = 0
-    var memoryTotalCost: Double = 0
-    var storageTotalCost: Double = 0
-    var bwTotalCost: Double = 0
+    var memoryTotalCost: Double     = 0
+    var storageTotalCost: Double    = 0
+    var bwTotalCost: Double         = 0
+
+    // For each VM object, create a VmCost object and extract the costs and prints it
     for (vm <- broker.getVmCreatedList.asScala) {
-      //      System.out.println("Debug: " + vm)
-      val cost: VmCost = new VmCost(vm)
-      processingTotalCost += cost.getProcessingCost
-      memoryTotalCost += cost.getMemoryCost
-      storageTotalCost += cost.getStorageCost
-      bwTotalCost += cost.getBwCost
-      totalCost += cost.getTotalCost
+      val cost: VmCost      = new VmCost(vm)
+      processingTotalCost   += cost.getProcessingCost
+      memoryTotalCost       += cost.getMemoryCost
+      storageTotalCost      += cost.getStorageCost
+      bwTotalCost           += cost.getBwCost
+      totalCost             += cost.getTotalCost
       System.out.println(cost)
     }
-
   }
