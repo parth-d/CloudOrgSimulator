@@ -16,15 +16,16 @@ object Simulation:
     logger.info("Run the simulations")
 
     // Run the simulations serially.
-//    SaaS.StartSimulation()
+    SaaS.StartSimulation()
 //    PaaS.StartSimulation()
 //    IaaS.StartSimulation()
 
     logger.info("Simulations exeution done")
 
     logger.info("\n\nProceeding to run the converted examples from Java to Scala")
+    
     // Run the converted examples (Java to Scala)
-    ConvertedToScala.Start()
+//    ConvertedToScala.Start()
 
     logger.info("Finished execution.")
 

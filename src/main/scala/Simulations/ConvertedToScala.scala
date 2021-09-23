@@ -41,10 +41,10 @@ object ConvertedToScala:
   val logger = CreateLogger(classOf[ConvertedToScala]);
 
   // Create the necessary objects
-  private val simulation : CloudSim = new CloudSim();
-  private val broker0 : DatacenterBroker = new DatacenterBrokerSimple(simulation);
-  private val dclist : List[Datacenter] = createDatacenter()
-  private val vmList : List[Vm] = createVms();
+  private val simulation : CloudSim         = new CloudSim();
+  private val broker0 : DatacenterBroker    = new DatacenterBrokerSimple(simulation);
+  private val dclist : List[Datacenter]     = createDatacenter()
+  private val vmList : List[Vm]             = createVms();
   private val cloudletList : List[Cloudlet] = createCloudlets();
 
 
