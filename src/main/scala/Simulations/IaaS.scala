@@ -155,7 +155,7 @@ object IaaS:
   private def createDatacenter(simulation_number: Int, simulation: CloudSim) : Datacenter = {
     // Create a string holding a partial path to the datacenter's properties to be read from the config
     val datacenterName : String = "datacenter" + simulation_number.toString
-    val datacenterPath : String = "PaaS.CloudProviderProperties." + datacenterName + "."
+    val datacenterPath : String = "IaaS.CloudProviderProperties." + datacenterName + "."
 
     // Read and store properties in their respective variables
     val num_hosts : Int = config.getInt(datacenterPath + "hosts")
@@ -311,9 +311,9 @@ object IaaS:
    */
   private def createCloudlets() : List[Cloudlet] = {
     // The utilization model object is created based on the utilization ratio specified in the config
-    val utilizationModel : UtilizationModelDynamic = new UtilizationModelDynamic(config.getDouble("PaaS.utilizationRatio"))
+    val utilizationModel : UtilizationModelDynamic = new UtilizationModelDynamic(config.getDouble("IaaS.utilizationRatio"))
 
-    val num_Cloudlets : Int = config.getInt("PaaS.BrokerProperties.cloudlet.number")
+    val num_Cloudlets : Int = config.getInt("IaaS.BrokerProperties.cloudlet.number")
 
     val cloudletList = ListBuffer.empty [Cloudlet]
 
@@ -335,9 +335,9 @@ object IaaS:
     }
 
     // Read and store properties in their respective variables
-    val cloudlet_Pes : Int = config.getInt("PaaS.BrokerProperties.cloudlet.pes")
-    val cloudlet_Size : Int = config.getInt("PaaS.BrokerProperties.cloudlet.size")
-    val cloudletFileSize : Int  = config.getInt("cloudSimulator.cloudlet.ioSizes")
+    val cloudlet_Pes : Int = config.getInt("IaaS.BrokerProperties.cloudlet.pes")
+    val cloudlet_Size : Int = config.getInt("IaaS.BrokerProperties.cloudlet.size")
+    val cloudletFileSize : Int  = config.getInt("IaaS.BrokerProperties.cloudlet.filesize")
 
     // Create a Simple Cloudlet object and set its properties
     val cloudlet : Cloudlet = new CloudletSimple(cloudlet_Size, cloudlet_Pes, model).setSizes(cloudletFileSize)

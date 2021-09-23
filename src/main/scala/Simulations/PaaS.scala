@@ -293,7 +293,7 @@ object PaaS:
     // Read and store properties in their respective variables
     val cloudlet_Pes : Int = config.getInt("PaaS.BrokerProperties.cloudlet.pes")
     val cloudlet_Size : Int = config.getInt("PaaS.BrokerProperties.cloudlet.size")
-    val cloudletFileSize : Int  = config.getInt("cloudSimulator.cloudlet.ioSizes")
+    val cloudletFileSize : Int  = config.getInt("PaaS.BrokerProperties.cloudlet.filesize")
 
     // Create a Simple Cloudlet object and set its properties
     val cloudlet : Cloudlet = new CloudletSimple(cloudlet_Size, cloudlet_Pes, model).setSizes(cloudletFileSize)
