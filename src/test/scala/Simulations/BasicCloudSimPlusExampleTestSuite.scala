@@ -1,6 +1,6 @@
 package Simulations
 
-import Simulations.BasicExample.config
+import Simulations.ConvertedToScala.config
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
