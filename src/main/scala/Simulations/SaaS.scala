@@ -262,7 +262,7 @@ object SaaS:
    */
   private def createCloudlets() : List[Cloudlet] = {
     // The utilization model object is created based on the utilization ratio specified in the config
-    val utilizationModel : UtilizationModelDynamic = new UtilizationModelDynamic(config.getDouble("SaaS.utilizationRatio"))
+    val utilizationModel : UtilizationModelDynamic = new UtilizationModelDynamic(config.getDouble("SaaS.utilizationRatio")).setMaxResourceUtilization(0.1)
     
     val num_Cloudlets : Int = config.getInt("SaaS.BrokerProperties.cloudlet.number")
     
