@@ -52,7 +52,8 @@ Some noteworthy points:
 
 The simulation executes all the options available to the broker to process the specific cloudlets, and then provides the cheapest option available for each type of Service.
 
-##Results
+## Sample Results
+### Values may change based on the configuration.
 
 | Number of Cloudlets | SaaS | PaaS | IaaS |
 | :---: | :---: | :---: | :---: |
