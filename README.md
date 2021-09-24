@@ -1,4 +1,7 @@
 # Homework 1
+## Name: Deshpande, Parth Makarand
+## UIN: 657711378
+## Email: pdeshp8@uic.edu
 ### Create cloud simulators in Scala for evaluating executions of applications in cloud datacenters with different characteristics and deployment models.
 ### Grade: 8%
 #### This Git repo contains the description of the first homework and an example implementation of a baseline cloud simulation in Scala. This repo can be cloned using the command git clone git@github.com:0x1DOCD00D/CloudOrgSimulator.git. If interested to learn the implementation details, students can clone CloudSimPlus or ingest it directly into IntelliJ from its [website](https://cloudsimplus.org/) or the [Github repo](https://github.com/manoelcampos/cloudsim-plus), however, it is not required for this homework.
