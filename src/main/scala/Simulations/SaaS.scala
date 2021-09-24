@@ -67,11 +67,11 @@ object SaaS:
   // Create a result ListBuffer to append the results and find minimum
   val results = ListBuffer.empty[Double]
 
-  // Main function to be executed
+  // Internal Driver function
   def StartSimulation() : String = {
     System.out.println("Currently executing SaaS")
 
-    // Iterating over the 3 possible options for the broker
+    // Iterating over the 3 possible options for the broker to choose from: {Slow, Medium, Fast}
     for (i <- 0 to 2){
       Start(i)
     }

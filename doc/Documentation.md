@@ -39,15 +39,24 @@ This simulation uses the Simulations.conf file to set the parameters for various
 
 Some noteworthy points:
 1. The parameters defining the total processing work (cloudlet size, cloudlet pes, number of cloudlets) is kept constant between the three simulations to get a fair comparison.
-2. SaaS:
+2. The individual simulations (SaaS, PaaS, IaaS) find the minimum cost within their simulations and returns it to the driver code (Simulation.scala) which in turn prints the value.
+3. SaaS:
     1. The cloud provider gives 3 options to the broker based on the processing speed. The broker (simulation) then executes and finds the cost for all 3 options and concludes the cheapest option.
     2. For simplicity purposes, the VM Scheduler, Cloudlet Scheduler and VM allocation policy are predefined in the config file and are kept constant.
-3. PaaS:
+4. PaaS:
     1. The cloud provider gives 3 options to the broker. They include 3 types of VMs (based on resources). The broker executes using two different cloudlet schedulers (TimeShared, SpaceShared) on each of the 3 available VM types equaling to 6 total options and then finds the cheapest one.
     2. For simplicity purposes, the VM Scheduler and VM allocation policy are predefined in the config file and are kept constant.
-4. IaaS:
+5. IaaS:
     1. The cloud provider gives 3 options to the broker including 3 type of hosts (again, based on resources). The broker now plays with 2 cloudlet scheduling policies (TimeShared, SpaceShared) and 2 VM scheduling policies (TimeShared, SpaceShared) checking 12 different options and their costs and then picking the cheapest one.
     2. For simplicity purposes, the VM allocation policy is predefined in the config file and is kept constant.
 
 The simulation executes all the options available to the broker to process the specific cloudlets, and then provides the cheapest option available for each type of Service.
 
+##Results
+
+| Number of Cloudlets | SaaS | PaaS | IaaS |
+| :---: | :---: | :---: | :---: |
+| 5 | 308.94 | 308.93 | 354.21 |
+| 10 | 313.08 | 313.08 | 387.15 |
+| 40 | 337.88 | 337.88 | 634.07 |
+| 50 | 346.15 | 346.17 | 716.34 |

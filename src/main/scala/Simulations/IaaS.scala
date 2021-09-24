@@ -73,7 +73,8 @@ object IaaS:
   def StartSimulation() : String = {
     System.out.println("Currently executing IaaS")
 
-    // Iterating over the 12 possible options for the broker (Toggling VM and Cloudlet Schedulers along with configs)
+    // Iterating over the 12 possible options for the broker to choose from:
+    // {Slow, Medium, Fast} X {CloudletSchedulerTimeShared, CloudletSchedulerSpaceShared} X {VmSchedulerTimeShared, VmSchedulerSpaceShared}
     for (i <- 0 to 2){
       Start(i)
     }

@@ -73,7 +73,7 @@ object PaaS:
   def StartSimulation() : String = {
     System.out.println("Currently executing PaaS")
 
-    // Iterating over the 6 possible options for the broker (Toggling Cloudlet Scheduler along with configs)
+    // Iterating over the 6 possible options for the broker to choose from: {Slow, Medium, Fast} X {CloudletSchedulerTimeShared, CloudletSchedulerSpaceShared}
     for (i <- 0 to 2){
       Start(i)
     }
