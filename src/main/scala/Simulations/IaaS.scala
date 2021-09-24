@@ -311,7 +311,7 @@ object IaaS:
    */
   private def createCloudlets() : List[Cloudlet] = {
     // The utilization model object is created based on the utilization ratio specified in the config
-    val utilizationModel : UtilizationModelDynamic = new UtilizationModelDynamic(config.getDouble("IaaS.utilizationRatio")).setMaxResourceUtilization(0.1)
+    val utilizationModel : UtilizationModelDynamic = new UtilizationModelDynamic(config.getDouble("IaaS.utilizationRatio")).setMaxResourceUtilization(0.5)
 
     val num_Cloudlets : Int = config.getInt("IaaS.BrokerProperties.cloudlet.number")
 
