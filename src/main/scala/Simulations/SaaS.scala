@@ -84,19 +84,23 @@ object SaaS:
     System.out.println("\n\nCurrent Config:")
     System.out.println("\t VM Config Code: " + simulation_number)
 
+    // Call the function which sets the required levels for the log file
+    configureLogs();
+
     // Create the necessary objects
     val simulation : CloudSim         = new CloudSim();
     val broker : DatacenterBroker     = new DatacenterBrokerSimple(simulation);
     val datacenter : Datacenter       = createDatacenter(simulation_number, simulation)
     val vm : Vm                       = createVm(simulation_number)
     val cloudletList : List[Cloudlet] = createCloudlets()
+    
+    logger.info("Created all objects successfully")
 
     // Submit the VM and Cloudlet list to the broker for it to process
     broker.submitCloudletList(cloudletList.asJava)
     broker.submitVmList(List(vm).asJava)
-
-    // Call the function which sets the required levels for the log file
-    configureLogs();
+    
+    logger.info("Submitted cloudlets and VM to the broker")
 
     // Start the simulation
     simulation.start();
@@ -134,7 +138,7 @@ object SaaS:
    * @return Datacenter object
    */
 
-  private def createDatacenter(simulation_number: Int, simulation: CloudSim) : Datacenter = {
+  def createDatacenter(simulation_number: Int, simulation: CloudSim) : Datacenter = {
     // Create a string holding a partial path to the datacenter's properties to be read from the config
     val datacenterName : String = "datacenter" + simulation_number.toString
     val datacenterPath : String = "SaaS.CloudProviderProperties." + datacenterName + "."

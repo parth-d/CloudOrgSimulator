@@ -105,6 +105,9 @@ object IaaS:
     System.out.println("\t VM Scheduler: " + vmsch)
     System.out.println("\t VM Config Code: " + simulation_number)
 
+    // Call the function which sets the required levels for the log file
+    configureLogs();
+
     // Create the necessary objects
     val simulation : CloudSim         = new CloudSim();
     val broker : DatacenterBroker     = new DatacenterBrokerSimple(simulation);
@@ -112,12 +115,13 @@ object IaaS:
     val vmList : List[Vm]             = createVm(simulation_number)
     val cloudletList : List[Cloudlet] = createCloudlets()
 
+    logger.info("Created all objects successfully")
+
     // Submit the VM and Cloudlet list to the broker for it to process
     broker.submitCloudletList(cloudletList.asJava)
     broker.submitVmList(vmList.asJava)
 
-    // Call the function which sets the required levels for the log file
-    configureLogs();
+    logger.info("Submitted cloudlets and VM to the broker")
 
     // Start the simulation
     simulation.start();
@@ -252,7 +256,7 @@ object IaaS:
    * @param simulation_number Current execution
    * @return List of VM objects
    */
-  private def createVm(simulation_number : Int) : List[Vm] = {
+  def createVm(simulation_number : Int) : List[Vm] = {
 
     val num_VMs : Int = config.getInt("IaaS.BrokerProperties.logic.num_vms")
     val vmList = ListBuffer.empty[Vm]

@@ -91,6 +91,9 @@ object PaaS:
     System.out.println("\t Cloudlet Scheduler: " + cloudletsch)
     System.out.println("\t VM Config Code: " + simulation_number)
 
+    // Call the function which sets the required levels for the log file
+    configureLogs();
+
     // Create the necessary objects
     val simulation : CloudSim         = new CloudSim();
     val broker : DatacenterBroker     = new DatacenterBrokerSimple(simulation);
@@ -98,12 +101,13 @@ object PaaS:
     val vm : Vm                       = createVm(simulation_number)
     val cloudletList : List[Cloudlet] = createCloudlets()
 
+    logger.info("Created all objects successfully")
+
     // Submit the VM and Cloudlet list to the broker for it to process
     broker.submitCloudletList(cloudletList.asJava)
     broker.submitVmList(List(vm).asJava)
 
-    // Call the function which sets the required levels for the log file
-    configureLogs();
+    logger.info("Submitted cloudlets and VM to the broker")
 
     // Start the simulation
     simulation.start();
@@ -208,7 +212,7 @@ object PaaS:
    * @param num Number of processing elements to be created
    * @return List of processing elements
    */
-  private def createPes(num: Int): List[Pe] ={
+  def createPes(num: Int): List[Pe] ={
     val pes = ListBuffer.empty[Pe]
 
     // Call the implementation function passing the number of processing elements to be created along with the ListBuffer
